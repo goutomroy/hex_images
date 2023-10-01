@@ -12,6 +12,7 @@ class PhotoViewSet(
     viewsets.mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
     GenericViewSet,
 ):
     queryset = Photo.objects.all()

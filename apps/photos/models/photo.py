@@ -5,7 +5,7 @@ from django.db import models
 
 from apps.accounts.models.profile import Profile
 from apps.core.models import BaseModel
-from workers.photos import create_thumbnails
+from apps.workers.photos import create_thumbnails
 
 
 def upload_to(instance, filename):
