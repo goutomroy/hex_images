@@ -1,0 +1,15 @@
+services:
+
+  redis:
+    image: redis:7.0.4-alpine
+    container_name: hex_images__redis
+    ports:
+      - 6379:6379
+    volumes:
+      - /var/hex_images_service/redis-data:/data
+    networks:
+      - back-tier
+
+networks:
+  back-tier:
+    driver: bridge

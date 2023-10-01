@@ -1,0 +1,20 @@
+# django
+Django==4.2.5
+
+# djangorestframework
+djangorestframework==3.14.0
+django-filter==23.3
+
+# caching
+django-redis-cache==3.0.1
+
+# Authentication and authorization
+django-dry-rest-permissions==1.2.0  # https://github.com/FJNR-inc/dry-rest-permissions
+
+# image manipulation
+ pillow==10.0.1
+
+
+ # celery
+celery==5.3.4
+django-celery-results==2.5.1

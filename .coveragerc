@@ -1,0 +1,22 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+source = .
+
+[report]
+omit =
+    hex_images/asgi.py
+    hex_images/routing.py
+    hex_images/wsgi.py
+    hex_images/asgi.py
+    hex_images/settings/*
+    */migrations/*
+    */tests/*
+    */apps.py
+
+exclude_lines =
+    def __str__
+
+[html]
+title = "Hex Images Service coverage report"
+directory = coverage_report
