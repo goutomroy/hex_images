@@ -20,7 +20,6 @@ from apps.photos.models.photo import Photo
 from apps.photos.models.thumbnail_size import ThumbnailSize
 
 
-
 class PhotoAPITestCase(APITestCase):
     PHOTOS_LIST_PATH = reverse("photos:photo-list")
 
@@ -41,9 +40,8 @@ class PhotoAPITestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @unittest.skip("Work in progress")
-    @patch("apps.photos.models.photo.create_thumbnails.delay")
-    def test_photo_create_success(self, _create_thumbnails: MagicMock):
+    @patch("apps.photos.models.photo.generate_thumbnails.delay")
+    def test_photo_create_success(self, _generate_thumbnails):
         with self._generate_image_file() as image_file:
             try:
                 data = {"image": image_file}
@@ -51,8 +49,8 @@ class PhotoAPITestCase(APITestCase):
                     self.PHOTOS_LIST_PATH, data, format="multipart"
                 )
                 self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-                # _create_thumbnails.delay.assert_called_with(response.data["id"], [200,])
-                _create_thumbnails.delay.delay.assert_called_once()
+                _generate_thumbnails.assert_called_once_with(response.data["id"], [200,])
+
             finally:
                 photo = Photo.objects.get(id=response.data["id"])
                 shutil.rmtree(Path(photo.image.path).parent)

@@ -9,7 +9,7 @@ from PIL import Image as PilImage
 
 
 @shared_task
-def create_thumbnails(original_image_id: uuid, desired_sizes: List[int]):
+def generate_thumbnails(original_image_id: uuid, desired_sizes: List[int]):
     from apps.photos.models.photo import Photo
     from apps.photos.models.thumbnail_photo import ThumbnailPhoto
 

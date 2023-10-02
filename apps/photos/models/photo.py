@@ -5,7 +5,7 @@ from django.db import models
 
 from apps.accounts.models.profile import Profile
 from apps.core.models import BaseModel
-from apps.workers.photos import create_thumbnails
+from apps.workers.photos import generate_thumbnails
 
 
 def upload_to(instance, filename):
@@ -31,4 +31,4 @@ class Photo(BaseModel):
             thumbnail_size.height
             for thumbnail_size in profile.account_tier.thumbnail_sizes.all()
         ]
-        create_thumbnails.delay(self.id, sizes)
+        generate_thumbnails.delay(str(self.id), sizes)
