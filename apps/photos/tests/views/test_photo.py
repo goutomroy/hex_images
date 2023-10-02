@@ -94,6 +94,29 @@ class PhotoAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     @patch("apps.photos.models.photo.generate_thumbnails.delay")
+    def test_retrieve_throttle_success(self, _generate_thumbnails):
+        with self._generate_image_file() as image_file:
+            try:
+                data = {"image": image_file}
+                response_post = self._client_user_basic.post(
+                    self.PHOTOS_LIST_PATH, data, format="multipart"
+                )
+                for _ in range(settings.THROTTLE_THRESHOLD):
+                    path = reverse(
+                        "photos:photo-detail", kwargs={"pk": response_post.data["id"]}
+                    )
+                    self._client_user_basic.get(path)
+                response = self._client_user_basic.get(
+                    self.PHOTOS_LIST_PATH,
+                )
+                self.assertEqual(
+                    response.status_code, status.HTTP_429_TOO_MANY_REQUESTS
+                )
+            finally:
+                photo = Photo.objects.get(id=response_post.data["id"])
+                shutil.rmtree(Path(photo.image.path).parent)
+
+    @patch("apps.photos.models.photo.generate_thumbnails.delay")
     def test_create_throttle_success(self, _generate_thumbnails):
         for _ in range(settings.PHOTO_CREATE_THROTTLE_THRESHOLD):
             with self._generate_image_file() as image_file:

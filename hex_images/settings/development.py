@@ -1,4 +1,4 @@
-# flake8: noqa: F405
+from .base import *  # noqa
 
 # project constant
 MAX_UPLOAD_SIZE = 3 * 1024 * 1024  # 3.0 MB
