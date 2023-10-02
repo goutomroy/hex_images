@@ -1,10 +1,9 @@
-from .base import *
-
+# flake8: noqa: F405
 
 # project constant
 MAX_UPLOAD_SIZE = 3 * 1024 * 1024  # 3.0 MB
 THROTTLE_THRESHOLD = 10
-PHOTO_CREATE_THROTTLE_THRESHOLD = 5
+PHOTO_CREATE_THROTTLE_THRESHOLD = 10
 
 # Cache
 CACHES = {

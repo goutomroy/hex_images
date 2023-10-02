@@ -1,5 +1,4 @@
 from rest_framework import mixins, permissions, viewsets
-from rest_framework.throttling import UserRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
 from apps.photos.models.photo import Photo
@@ -7,8 +6,10 @@ from apps.photos.serializers.photo_serializer import (
     PhotoCreateSerializer,
     PhotoSerializer,
 )
-from apps.photos.throttles.photo import PhotoCreateUserRateThrottle, \
-    PhotoDefaultUserRateThrottle
+from apps.photos.throttles.photo import (
+    PhotoCreateUserRateThrottle,
+    PhotoDefaultUserRateThrottle,
+)
 
 
 class PhotoViewSet(
@@ -36,7 +37,7 @@ class PhotoViewSet(
         return self.serializer_class
 
     def get_throttles(self):
-        if self.action == 'create':
+        if self.action == "create":
             custom_throttle_classes = [PhotoCreateUserRateThrottle]
         else:
             custom_throttle_classes = [PhotoDefaultUserRateThrottle]
@@ -44,8 +45,3 @@ class PhotoViewSet(
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-
-
-
-

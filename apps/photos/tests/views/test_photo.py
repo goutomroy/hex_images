@@ -6,9 +6,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.conf import settings
-from django.core.cache import cache
-from django.test import override_settings
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from model_bakery import baker
 from PIL import Image
 from rest_framework import status
@@ -84,9 +83,7 @@ class PhotoAPITestCase(APITestCase):
                 photo = Photo.objects.get(id=response.data["id"])
                 shutil.rmtree(Path(photo.image.path).parent)
 
-    # @override_settings(THROTTLE_THRESHOLD=settings.TESTING_THRESHOLD)
-    def test_throttle(self):
-
+    def test_list_throttle_success(self):
         for _ in range(settings.THROTTLE_THRESHOLD):
             self._client_user_basic.get(
                 self.PHOTOS_LIST_PATH,
@@ -95,6 +92,27 @@ class PhotoAPITestCase(APITestCase):
             self.PHOTOS_LIST_PATH,
         )
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    @patch("apps.photos.models.photo.generate_thumbnails.delay")
+    def test_create_throttle_success(self, _generate_thumbnails):
+        for _ in range(settings.PHOTO_CREATE_THROTTLE_THRESHOLD):
+            with self._generate_image_file() as image_file:
+                try:
+                    data = {"image": image_file}
+                    response = self._client_user_basic.post(
+                        self.PHOTOS_LIST_PATH, data, format="multipart"
+                    )
+                    # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                finally:
+                    photo = Photo.objects.get(id=response.data["id"])
+                    shutil.rmtree(Path(photo.image.path).parent)
+
+        with self._generate_image_file() as image_file:
+            data = {"image": image_file}
+            response = self._client_user_basic.post(
+                self.PHOTOS_LIST_PATH, data, format="multipart"
+            )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def _create_basic_user(self):
         self._user_basic = baker.make(User)
@@ -155,4 +173,3 @@ class PhotoAPITestCase(APITestCase):
             image.save(tmp_file, "jpeg")
             tmp_file.seek(0)
             yield tmp_file
-

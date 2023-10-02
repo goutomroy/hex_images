@@ -1,4 +1,4 @@
-from .development import *
+# flake8: noqa: F405
 
 # Cache
 CACHES = {
