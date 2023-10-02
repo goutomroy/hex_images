@@ -1,12 +1,13 @@
 import os
 import shutil
 import tempfile
-import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from django.conf import settings
+from django.core.cache import cache
+from django.test import override_settings
 from django.contrib.auth.models import User
 from model_bakery import baker
 from PIL import Image
@@ -27,6 +28,10 @@ class PhotoAPITestCase(APITestCase):
         self._create_basic_user()
         self._create_premium_user()
         self._create_enterprise_user()
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
 
     def test_put_is_not_allowed(self):
         response = self._client_user_basic.put(
@@ -40,21 +45,6 @@ class PhotoAPITestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @patch("apps.photos.models.photo.generate_thumbnails.delay")
-    def test_photo_create_success(self, _generate_thumbnails):
-        with self._generate_image_file() as image_file:
-            try:
-                data = {"image": image_file}
-                response = self._client_user_basic.post(
-                    self.PHOTOS_LIST_PATH, data, format="multipart"
-                )
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-                _generate_thumbnails.assert_called_once_with(response.data["id"], [200,])
-
-            finally:
-                photo = Photo.objects.get(id=response.data["id"])
-                shutil.rmtree(Path(photo.image.path).parent)
-
     def test_photo_not_valid_format(self):
         with self._generate_image_file(suffix=".jpeg") as image_file:
             data = {"image": image_file}
@@ -65,14 +55,46 @@ class PhotoAPITestCase(APITestCase):
             self.assertIn("is not a valid image format", response.data["image"][0])
 
     def test_photo_size_exceed(self):
-        photo_path = os.path.join(settings.MEDIA_ROOT, 'big_test_image.jpg')
-        with open(photo_path, 'rb') as photo_data:
+        photo_path = os.path.join(settings.MEDIA_ROOT, "big_test_image.jpg")
+        with open(photo_path, "rb") as photo_data:
             data = {"image": photo_data}
             response = self._client_user_basic.post(
                 self.PHOTOS_LIST_PATH, data, format="multipart"
             )
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertIn("File size exceeds the limit", response.data["image"][0])
+
+    @patch("apps.photos.models.photo.generate_thumbnails.delay")
+    def test_photo_create_success(self, _generate_thumbnails):
+        with self._generate_image_file() as image_file:
+            try:
+                data = {"image": image_file}
+                response = self._client_user_basic.post(
+                    self.PHOTOS_LIST_PATH, data, format="multipart"
+                )
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                _generate_thumbnails.assert_called_once_with(
+                    response.data["id"],
+                    [
+                        200,
+                    ],
+                )
+
+            finally:
+                photo = Photo.objects.get(id=response.data["id"])
+                shutil.rmtree(Path(photo.image.path).parent)
+
+    # @override_settings(THROTTLE_THRESHOLD=settings.TESTING_THRESHOLD)
+    def test_throttle(self):
+
+        for _ in range(settings.THROTTLE_THRESHOLD):
+            self._client_user_basic.get(
+                self.PHOTOS_LIST_PATH,
+            )
+        response = self._client_user_basic.get(
+            self.PHOTOS_LIST_PATH,
+        )
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def _create_basic_user(self):
         self._user_basic = baker.make(User)
@@ -129,7 +151,8 @@ class PhotoAPITestCase(APITestCase):
     @contextmanager
     def _generate_image_file(self, suffix=".jpg", height=100, width=100):
         with tempfile.NamedTemporaryFile(suffix=suffix) as tmp_file:
-            image = Image.new("RGB", size=(width, height), color = (153, 153, 255))
+            image = Image.new("RGB", size=(width, height), color=(153, 153, 255))
             image.save(tmp_file, "jpeg")
             tmp_file.seek(0)
             yield tmp_file
+
