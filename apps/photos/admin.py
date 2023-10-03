@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 
+from apps.photos.models.expiring_link import ExpiringLink
 from apps.photos.models.photo import Photo
 from apps.photos.models.thumbnail_photo import ThumbnailPhoto
 from apps.photos.models.thumbnail_size import ThumbnailSize
@@ -25,3 +26,9 @@ class ThumbnailPhotoAdmin(ModelAdmin):
         "thumbnail",
     )
     list_filter = ("original_image",)
+
+
+@admin.register(ExpiringLink)
+class ExpiringLinkAdmin(ModelAdmin):
+    list_display = ("image", "link", "expired_at")
+    list_filter = ("image",)

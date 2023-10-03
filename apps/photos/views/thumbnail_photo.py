@@ -2,7 +2,7 @@ from rest_framework import mixins, permissions
 from rest_framework.viewsets import GenericViewSet
 
 from apps.photos.models.thumbnail_photo import ThumbnailPhoto
-from apps.photos.serializers.thumbnail_photo_serializer import ThumbnailPhotoSerializer
+from apps.photos.serializers.thumbnail_photo import ThumbnailPhotoSerializer
 
 
 class ThumbnailPhotoViewSet(mixins.ListModelMixin, GenericViewSet):

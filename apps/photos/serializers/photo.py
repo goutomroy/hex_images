@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.photos.models.photo import Photo
 from apps.photos.serializers.mixins import PhotoSerializerMixin
-from apps.photos.serializers.thumbnail_photo_serializer import ThumbnailPhotoSerializer
+from apps.photos.serializers.thumbnail_photo import ThumbnailPhotoSerializer
 from apps.photos.validators import validate_image_extension, validate_image_size
 
 

@@ -81,7 +81,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "hex_images.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -154,3 +153,6 @@ MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20.0 MB
 
 THROTTLE_THRESHOLD = 20
 PHOTO_CREATE_THROTTLE_THRESHOLD = 5
+MIN_EXPIRY_LINK_TIME = 300
+MAX_EXPIRY_LINK_TIME = 30000
+DEFAULT_EXPIRY_LINK_TIME = 15150

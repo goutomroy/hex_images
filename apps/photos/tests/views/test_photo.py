@@ -17,6 +17,7 @@ from rest_framework.test import APIClient, APITestCase
 from apps.accounts.models.account_tier import AccountTier
 from apps.accounts.models.profile import Profile
 from apps.photos.models.photo import Photo
+from apps.photos.models.thumbnail_photo import ThumbnailPhoto
 from apps.photos.models.thumbnail_size import ThumbnailSize
 
 
@@ -44,27 +45,8 @@ class PhotoAPITestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_photo_not_valid_format(self):
-        with self._generate_image_file(suffix=".jpeg") as image_file:
-            data = {"image": image_file}
-            response = self._client_user_basic.post(
-                self.PHOTOS_LIST_PATH, data, format="multipart"
-            )
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn("is not a valid image format", response.data["image"][0])
-
-    def test_photo_size_exceed(self):
-        photo_path = os.path.join(settings.MEDIA_ROOT, "big_test_image.jpg")
-        with open(photo_path, "rb") as photo_data:
-            data = {"image": photo_data}
-            response = self._client_user_basic.post(
-                self.PHOTOS_LIST_PATH, data, format="multipart"
-            )
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn("File size exceeds the limit", response.data["image"][0])
-
     @patch("apps.photos.models.photo.generate_thumbnails.delay")
-    def test_photo_create_success(self, _generate_thumbnails):
+    def test_photo_multi_part_create_success(self, _generate_thumbnails):
         with self._generate_image_file() as image_file:
             try:
                 data = {"image": image_file}
@@ -83,6 +65,156 @@ class PhotoAPITestCase(APITestCase):
                 photo = Photo.objects.get(id=response.data["id"])
                 shutil.rmtree(Path(photo.image.path).parent)
 
+    def test_photo_list_success(self):
+        photo = baker.make(Photo, user=self._user_basic, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=1
+        )
+        response = self._client_user_basic.get(self.PHOTOS_LIST_PATH)
+
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertTrue("image" not in response.data["results"][0])
+        self.assertEqual(len(response.data["results"][0]["thumbnails"]), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_photo_retrieve_success(self):
+        photo = baker.make(Photo, user=self._user_basic, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=1
+        )
+        path = reverse("photos:photo-detail", kwargs={"pk": photo.id})
+
+        response = self._client_user_basic.get(path)
+
+        self.assertTrue("image" not in response.data)
+        self.assertEqual(len(response.data["thumbnails"]), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_photo_destroy_success(self):
+        photo = baker.make(Photo, user=self._user_basic, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=1
+        )
+        path = reverse("photos:photo-detail", kwargs={"pk": photo.id})
+
+        prev_photo_count = Photo.objects.filter(user=self._user_basic).count()
+        prev_thumbnail_photo_count = ThumbnailPhoto.objects.filter(
+            original_image__user=self._user_basic
+        ).count()
+
+        response = self._client_user_basic.delete(path)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        now_photo_count = Photo.objects.filter(user=self._user_basic).count()
+        now_thumbnail_photo_count = ThumbnailPhoto.objects.filter(
+            original_image__user=self._user_basic
+        ).count()
+
+        self.assertEqual(prev_photo_count - 1, now_photo_count)
+        self.assertEqual(prev_thumbnail_photo_count - 1, now_thumbnail_photo_count)
+
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_photo_list_success_premium_user(self):
+        photo = baker.make(Photo, user=self._user_premium, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
+        )
+        response = self._client_user_premium.get(self.PHOTOS_LIST_PATH)
+
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertTrue("image" in response.data["results"][0])
+        self.assertEqual(len(response.data["results"][0]["thumbnails"]), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_photo_retrieve_success_premium_user(self):
+        photo = baker.make(Photo, user=self._user_premium, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
+        )
+        path = reverse("photos:photo-detail", kwargs={"pk": photo.id})
+
+        response = self._client_user_premium.get(path)
+
+        self.assertTrue("image" in response.data)
+        self.assertEqual(len(response.data["thumbnails"]), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_photo_list_success_enterprise_user(self):
+        photo = baker.make(Photo, user=self._user_enterprise, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
+        )
+        response = self._client_user_enterprise.get(self.PHOTOS_LIST_PATH)
+
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertTrue("image" in response.data["results"][0])
+        self.assertEqual(len(response.data["results"][0]["thumbnails"]), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_photo_retrieve_success_enterprise_user(self):
+        photo = baker.make(Photo, user=self._user_enterprise, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
+        )
+        path = reverse("photos:photo-detail", kwargs={"pk": photo.id})
+
+        response = self._client_user_enterprise.get(path)
+
+        self.assertTrue("image" in response.data)
+        self.assertEqual(len(response.data["thumbnails"]), 2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_photo_is_not_valid_format_when_creating(self):
+        with self._generate_image_file(suffix=".jpeg") as image_file:
+            data = {"image": image_file}
+            response = self._client_user_basic.post(
+                self.PHOTOS_LIST_PATH, data, format="multipart"
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("is not a valid image format", response.data["image"][0])
+
+    def test_photo_size_exceed_when_creating(self):
+        photo_path = os.path.join(settings.MEDIA_ROOT, "big_test_image.jpg")
+        with open(photo_path, "rb") as photo_data:
+            data = {"image": photo_data}
+            response = self._client_user_basic.post(
+                self.PHOTOS_LIST_PATH, data, format="multipart"
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("File size exceeds the limit", response.data["image"][0])
+
+    @patch("apps.photos.models.photo.generate_thumbnails.delay")
+    def test_create_multi_part_throttle_success(self, _generate_thumbnails):
+        for _ in range(settings.PHOTO_CREATE_THROTTLE_THRESHOLD):
+            with self._generate_image_file() as image_file:
+                data = {"image": image_file}
+                response = self._client_user_basic.post(
+                    self.PHOTOS_LIST_PATH, data, format="multipart"
+                )
+
+                photo = Photo.objects.get(id=response.data["id"])
+                shutil.rmtree(Path(photo.image.path).parent)
+
+        with self._generate_image_file() as image_file:
+            data = {"image": image_file}
+            response = self._client_user_basic.post(
+                self.PHOTOS_LIST_PATH, data, format="multipart"
+            )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
     def test_list_throttle_success(self):
         for _ in range(settings.THROTTLE_THRESHOLD):
             self._client_user_basic.get(
@@ -93,49 +225,16 @@ class PhotoAPITestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
-    @patch("apps.photos.models.photo.generate_thumbnails.delay")
-    def test_retrieve_throttle_success(self, _generate_thumbnails):
-        with self._generate_image_file() as image_file:
-            try:
-                data = {"image": image_file}
-                response_post = self._client_user_basic.post(
-                    self.PHOTOS_LIST_PATH, data, format="multipart"
-                )
-                for _ in range(settings.THROTTLE_THRESHOLD):
-                    path = reverse(
-                        "photos:photo-detail", kwargs={"pk": response_post.data["id"]}
-                    )
-                    self._client_user_basic.get(path)
-                response = self._client_user_basic.get(
-                    self.PHOTOS_LIST_PATH,
-                )
-                self.assertEqual(
-                    response.status_code, status.HTTP_429_TOO_MANY_REQUESTS
-                )
-            finally:
-                photo = Photo.objects.get(id=response_post.data["id"])
-                shutil.rmtree(Path(photo.image.path).parent)
+    def test_retrieve_throttle_success(self):
+        photo = baker.make(Photo, user=self._user_basic, _create_files=True)
+        path = reverse("photos:photo-detail", kwargs={"pk": photo.id})
+        for _ in range(settings.THROTTLE_THRESHOLD):
+            self._client_user_basic.get(path)
 
-    @patch("apps.photos.models.photo.generate_thumbnails.delay")
-    def test_create_throttle_success(self, _generate_thumbnails):
-        for _ in range(settings.PHOTO_CREATE_THROTTLE_THRESHOLD):
-            with self._generate_image_file() as image_file:
-                try:
-                    data = {"image": image_file}
-                    response = self._client_user_basic.post(
-                        self.PHOTOS_LIST_PATH, data, format="multipart"
-                    )
-                    # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-                finally:
-                    photo = Photo.objects.get(id=response.data["id"])
-                    shutil.rmtree(Path(photo.image.path).parent)
+        response = self._client_user_basic.get(path)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
-        with self._generate_image_file() as image_file:
-            data = {"image": image_file}
-            response = self._client_user_basic.post(
-                self.PHOTOS_LIST_PATH, data, format="multipart"
-            )
-            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        shutil.rmtree(Path(photo.image.path).parent)
 
     def _create_basic_user(self):
         self._user_basic = baker.make(User)

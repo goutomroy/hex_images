@@ -2,10 +2,7 @@ from rest_framework import mixins, permissions, viewsets
 from rest_framework.viewsets import GenericViewSet
 
 from apps.photos.models.photo import Photo
-from apps.photos.serializers.photo_serializer import (
-    PhotoCreateSerializer,
-    PhotoSerializer,
-)
+from apps.photos.serializers.photo import PhotoCreateSerializer, PhotoSerializer
 from apps.photos.throttles.photo import (
     PhotoCreateUserRateThrottle,
     PhotoDefaultUserRateThrottle,
