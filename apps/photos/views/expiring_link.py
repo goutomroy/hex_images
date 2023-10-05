@@ -18,11 +18,11 @@ class ExpiringLinkViewSet(
 ):
     queryset = ExpiringLink.objects.all()
     serializer_class = ExpiringLinkSerializer
-    throttle_classes = [ExpiringLinkUserRateThrottle]
-    permission_classes = [
+    throttle_classes = (ExpiringLinkUserRateThrottle,)
+    permission_classes = (
         IsAuthenticated,
         CanListCreateRetrieveExpiringLink,
-    ]
+    )
 
     def get_queryset(self):
         return (

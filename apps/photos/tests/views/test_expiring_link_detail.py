@@ -92,7 +92,7 @@ class ExpiringLinkDetailTestCase(TestCaseMixin, APITestCase):
         post_response = self._client_user_enterprise.post(
             self.EXPIRING_LINK_LIST_PATH, {"image": photo.id, "expiring_time": 400}
         )
-        for _ in range(settings.THROTTLE_THRESHOLD-1):
+        for _ in range(settings.THROTTLE_THRESHOLD - 1):
             response = self._client_user_enterprise.get(post_response.data["link"])
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 

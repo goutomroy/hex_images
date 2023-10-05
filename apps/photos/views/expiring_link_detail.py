@@ -16,11 +16,11 @@ class ExpiringLinkDetailView(
     ExpiringLinkDecodeMixin, mixins.RetrieveModelMixin, GenericViewSet
 ):
     queryset = ExpiringLink.objects.all()
-    permission_classes = [
+    permission_classes = (
         permissions.IsAuthenticated,
         CanListCreateRetrieveExpiringLink,
-    ]
-    throttle_classes = [ExpiringLinkUserRateThrottle]
+    )
+    throttle_classes = (ExpiringLinkUserRateThrottle,)
 
     def get_queryset(self):
         return (

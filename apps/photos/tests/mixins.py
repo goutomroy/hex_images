@@ -13,7 +13,6 @@ from apps.photos.models.thumbnail_size import ThumbnailSize
 
 
 class TestCaseMixin:
-
     def setUp(self) -> None:
         self._create_basic_user()
         self._create_premium_user()
