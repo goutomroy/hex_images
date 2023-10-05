@@ -30,5 +30,10 @@ class ThumbnailPhotoAdmin(ModelAdmin):
 
 @admin.register(ExpiringLink)
 class ExpiringLinkAdmin(ModelAdmin):
-    list_display = ("image", "link", "expired_at")
+    list_display = (
+        "image",
+        "created",
+        "expired_at",
+        "link",
+    )
     list_filter = ("image",)

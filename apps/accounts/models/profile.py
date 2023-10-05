@@ -12,3 +12,6 @@ class Profile(BaseModel):
         null=True,
         related_name="users",
     )
+
+    def __str__(self):
+        return self.user.username
