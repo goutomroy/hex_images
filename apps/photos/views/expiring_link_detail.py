@@ -2,18 +2,25 @@ import mimetypes
 
 from django.http import FileResponse
 from django.utils import timezone
-from rest_framework import mixins
+from rest_framework import mixins, permissions
 from rest_framework.generics import get_object_or_404
 from rest_framework.viewsets import GenericViewSet
 
 from apps.photos.models.expiring_link import ExpiringLink
+from apps.photos.permissions import CanListCreateRetrieveExpiringLink
 from apps.photos.serializers.mixins import ExpiringLinkDecodeMixin
+from apps.photos.throttles.expiring_link import ExpiringLinkUserRateThrottle
 
 
 class ExpiringLinkDetailView(
     ExpiringLinkDecodeMixin, mixins.RetrieveModelMixin, GenericViewSet
 ):
     queryset = ExpiringLink.objects.all()
+    permission_classes = [
+        permissions.IsAuthenticated,
+        CanListCreateRetrieveExpiringLink,
+    ]
+    throttle_classes = [ExpiringLinkUserRateThrottle]
 
     def get_queryset(self):
         return (

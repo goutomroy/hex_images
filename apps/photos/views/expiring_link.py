@@ -1,10 +1,12 @@
 from django.utils import timezone
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import mixins, viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from apps.photos.models.expiring_link import ExpiringLink
 from apps.photos.permissions import CanListCreateRetrieveExpiringLink
 from apps.photos.serializers.expiring_link import ExpiringLinkSerializer
+from apps.photos.throttles.expiring_link import ExpiringLinkUserRateThrottle
 
 
 class ExpiringLinkViewSet(
@@ -16,8 +18,9 @@ class ExpiringLinkViewSet(
 ):
     queryset = ExpiringLink.objects.all()
     serializer_class = ExpiringLinkSerializer
+    throttle_classes = [ExpiringLinkUserRateThrottle]
     permission_classes = [
-        permissions.IsAuthenticated,
+        IsAuthenticated,
         CanListCreateRetrieveExpiringLink,
     ]
 
@@ -31,6 +34,3 @@ class ExpiringLinkViewSet(
                 expired_at__gt=timezone.now(),
             )
         )
-
-    # def perform_create(self, serializer):
-    #     return super().perform_create(serializer)
