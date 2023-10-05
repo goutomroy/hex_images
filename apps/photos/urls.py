@@ -11,8 +11,8 @@ router.register("photos", PhotoViewSet)
 router.register("thumbnail_photos", ThumbnailPhotoViewSet)
 router.register("expiring_links", ExpiringLinkViewSet)
 
-
 app_name = "photos"
+
 urlpatterns = [
     *router.urls,
     path(
