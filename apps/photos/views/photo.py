@@ -1,3 +1,6 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.viewsets import GenericViewSet
 
@@ -39,6 +42,12 @@ class PhotoViewSet(
         else:
             custom_throttle_classes = [PhotoDefaultUserRateThrottle]
         return [throttle() for throttle in custom_throttle_classes]
+
+    # With cookie: cache requested url for each user for 3 minutes
+    @method_decorator(cache_page(60 * 3))
+    @method_decorator(vary_on_cookie)
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
