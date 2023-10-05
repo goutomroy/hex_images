@@ -10,3 +10,6 @@ class ExpiringLink(BaseModel):
     )
     link = models.CharField(max_length=255, blank=True)
     expired_at = models.DateTimeField(blank=True)
+
+    class Meta:
+        ordering = ("-created",)
