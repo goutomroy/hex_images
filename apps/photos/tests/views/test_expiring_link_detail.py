@@ -72,7 +72,11 @@ class ExpiringLinkDetailTestCase(TestCaseMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_retrieve_success(self):
-        photo = baker.make(Photo, user=self._user_enterprise, _create_files=True)
+        photo = baker.make(
+            Photo,
+            user=self._user_enterprise,
+            _create_files=True,
+        )
         baker.make(
             ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
         )
@@ -82,6 +86,29 @@ class ExpiringLinkDetailTestCase(TestCaseMixin, APITestCase):
         response = self._client_user_enterprise.get(response.data["link"])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        shutil.rmtree(Path(photo.image.path).parent)
+
+    def test_equality_of_original_and_downloaded_image_bytes_success(self):
+        photo = baker.make(
+            Photo,
+            user=self._user_enterprise,
+            _create_files=True,
+        )
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
+        )
+        response = self._client_user_enterprise.post(
+            self.EXPIRING_LINK_LIST_PATH, {"image": photo.id, "expiring_time": 400}
+        )
+        response = self._client_user_enterprise.get(response.data["link"])
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.headers["Content-Type"], "image/jpeg")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f'attachment; filename="{photo.image.name.split("/")[-1]}"',
+        )
+        self.assertEqual(b"".join(response.streaming_content), photo.image.read())
         shutil.rmtree(Path(photo.image.path).parent)
 
     def test_throttle_retrieve_success(self):
