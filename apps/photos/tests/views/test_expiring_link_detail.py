@@ -2,6 +2,7 @@ import shutil
 import uuid
 from pathlib import Path
 
+from django.conf import settings
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -70,7 +71,7 @@ class ExpiringLinkDetailTestCase(TestCaseMixin, APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_expiring_link_create_success(self):
+    def test_retrieve_success(self):
         photo = baker.make(Photo, user=self._user_enterprise, _create_files=True)
         baker.make(
             ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
@@ -83,3 +84,19 @@ class ExpiringLinkDetailTestCase(TestCaseMixin, APITestCase):
 
         shutil.rmtree(Path(photo.image.path).parent)
 
+    def test_throttle_retrieve_success(self):
+        photo = baker.make(Photo, user=self._user_enterprise, _create_files=True)
+        baker.make(
+            ThumbnailPhoto, original_image=photo, _create_files=True, _quantity=2
+        )
+        post_response = self._client_user_enterprise.post(
+            self.EXPIRING_LINK_LIST_PATH, {"image": photo.id, "expiring_time": 400}
+        )
+        for _ in range(settings.THROTTLE_THRESHOLD-1):
+            response = self._client_user_enterprise.get(post_response.data["link"])
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self._client_user_enterprise.get(post_response.data["link"])
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        shutil.rmtree(Path(photo.image.path).parent)
