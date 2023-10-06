@@ -1,5 +1,5 @@
 ### Setup 
-** Run following commands **
+**Run following commands**
 * docker-compose up -d
 * docker container exec -it hex_images__web python manage.py create_test_users
 
