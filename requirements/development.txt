@@ -11,7 +11,7 @@ djet==0.3.0
 model-bakery==1.15.0
 
 # dependency and safety checker
-safety==2.3.5
+safety
 insecure-package==0.1.0
 graphviz==0.20.1
 pipdeptree==2.13.0

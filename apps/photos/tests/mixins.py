@@ -14,6 +14,7 @@ from apps.photos.models.thumbnail_size import ThumbnailSize
 
 class TestCaseMixin:
     def setUp(self) -> None:
+        self._create_thumbnail_sizes()
         self._create_basic_user()
         self._create_premium_user()
         self._create_enterprise_user()
@@ -29,7 +30,7 @@ class TestCaseMixin:
 
         self._account_tier_basic = baker.make(
             AccountTier,
-            thumbnail_sizes=[self._get_thumbnail_size(200)],
+            thumbnail_sizes=[self._thumbnail_200],
         )
         self._profile_basic = baker.make(
             Profile, user=self._user_basic, account_tier=self._account_tier_basic
@@ -42,10 +43,7 @@ class TestCaseMixin:
 
         self._account_tier_premium = baker.make(
             AccountTier,
-            thumbnail_sizes=[
-                self._get_thumbnail_size(200),
-                self._get_thumbnail_size(400),
-            ],
+            thumbnail_sizes=[self._thumbnail_200, self._thumbnail_400],
             can_generate_expiring_links=False,
             presence_of_original_image=True,
         )
@@ -60,10 +58,7 @@ class TestCaseMixin:
 
         self._account_tier_premium = baker.make(
             AccountTier,
-            thumbnail_sizes=[
-                self._get_thumbnail_size(200),
-                self._get_thumbnail_size(400),
-            ],
+            thumbnail_sizes=[self._thumbnail_200, self._thumbnail_400],
             can_generate_expiring_links=True,
             presence_of_original_image=True,
         )
@@ -71,8 +66,9 @@ class TestCaseMixin:
             Profile, user=self._user_enterprise, account_tier=self._account_tier_premium
         )
 
-    def _get_thumbnail_size(self, height):
-        return baker.make(ThumbnailSize, height=height)
+    def _create_thumbnail_sizes(self):
+        self._thumbnail_200 = baker.make(ThumbnailSize, height=200)
+        self._thumbnail_400 = baker.make(ThumbnailSize, height=400)
 
     @contextmanager
     def _generate_image_file(self, suffix=".jpg", height=100, width=100):

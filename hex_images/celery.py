@@ -9,7 +9,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hex_images.settings.development
 
 
 class Config:
-    broker_url = "redis://localhost:6379/0"
+    broker_url = "redis://redis:6379/0"
     result_backend = "django-db"
     beat_max_loop_interval = 600
     result_cache_max = 1000
@@ -31,4 +31,3 @@ class Config:
 app = Celery("hex_images")
 app.config_from_object(Config(), namespace="CELERY")
 app.autodiscover_tasks()
-# DJANGO_SETTINGS_MODULE=ticket_world.settings.development

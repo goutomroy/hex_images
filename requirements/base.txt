@@ -5,6 +5,10 @@ Django==4.2.5
 djangorestframework==3.14.0
 django-filter==23.3
 
+# database
+psycopg2-binary==2.9.9
+
+
 # caching
 django-redis-cache==3.0.1
 
