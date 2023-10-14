@@ -29,5 +29,7 @@ class Config:
 
 
 app = Celery("hex_images")
+
+
 app.config_from_object(Config(), namespace="CELERY")
 app.autodiscover_tasks()
