@@ -9,7 +9,7 @@ PHOTO_CREATE_THROTTLE_THRESHOLD = 10
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379/0",
+        "LOCATION": "redis://localhost:6379/0",
     }
 }
 

@@ -28,7 +28,7 @@ class ExpiringLinkViewSet(
         return (
             super()
             .get_queryset()
-            .prefetch_related("image__user")
+            .select_related("image__user")
             .filter(
                 image__user=self.request.user,
                 expired_at__gt=timezone.now(),
