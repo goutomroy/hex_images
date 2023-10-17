@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from .base import *  # noqa
 
 # project constant
@@ -9,7 +11,7 @@ PHOTO_CREATE_THROTTLE_THRESHOLD = 10
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://localhost:6379/0",
+        "LOCATION": settings.REDIS_CONNECTION_STRING,
     }
 }
 

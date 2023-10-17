@@ -20,7 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = (
+    os.environ.get(
+        "SECRET_KEY",
+        "django-insecure-@0*hp*@)v1qpq2j&!s3+2gw7!f=kh0h$9tf_e0w4prq&=q860h",
+    ),
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -87,21 +92,27 @@ WSGI_APPLICATION = "hex_images.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": os.environ.get("POSTGRES_HOST"),
-        "PORT": os.environ.get("POSTGRES_PORT"),
+        "NAME": os.environ.get("POSTGRES_DB", "hex_images"),
+        "USER": os.environ.get("POSTGRES_USER", "hex_images"),
+        "PASSWORD": os.environ.get(
+            "POSTGRES_PASSWORD", "UiZz91YIW5GETnX2ifoCl8BtI8wuToLS"
+        ),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         "ATOMIC_REQUESTS": True,
         "CONN_MAX_AGE": 60 * 10,
     }
 }
 
 # Cache
+REDIS_CONNECTION_STRING = os.environ.get(
+    "REDIS_CONNECTION_STRING", "redis://localhost:6379"
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379/0",
+        "LOCATION": REDIS_CONNECTION_STRING,
     }
 }
 

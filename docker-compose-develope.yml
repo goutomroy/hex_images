@@ -1,0 +1,29 @@
+services:
+
+  postgres:
+    image: postgres:15.3-alpine
+    container_name: hex_images__postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - /var/hex_images_service/postgres-data:/var/lib/postgresql/data
+    env_file:
+      - .envs/.env.dev
+
+    restart: always
+    networks:
+      - back-tier
+
+  redis:
+    image: redis:7.0.4-alpine
+    container_name: hex_images__redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - /var/hex_images_service/redis-data:/data
+    networks:
+      - back-tier
+
+networks:
+  back-tier:
+    driver: bridge

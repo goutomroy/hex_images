@@ -14,5 +14,3 @@ RUN pip install -r requirements/development.txt
 COPY . .
 
 LABEL maintainer="Goutom Roy" version="1.0.0"
-
-
