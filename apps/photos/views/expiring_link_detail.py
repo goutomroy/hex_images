@@ -36,7 +36,7 @@ class ExpiringLinkDetailView(
     def get_object(self):
         signed_link = self.kwargs.get("signed_link")
         expiring_link_id = self._decode_signed_link(signed_link)
-        expiring_link = get_object_or_404(self.queryset, pk=expiring_link_id)
+        expiring_link = get_object_or_404(self.get_queryset(), pk=expiring_link_id)
         return expiring_link
 
     def retrieve(self, request, *args, **kwargs):
