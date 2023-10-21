@@ -109,6 +109,7 @@ REDIS_CONNECTION_STRING = os.environ.get(
     "REDIS_CONNECTION_STRING", "redis://localhost:6379"
 )
 
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
